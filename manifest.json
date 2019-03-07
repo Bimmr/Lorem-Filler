@@ -1,0 +1,34 @@
+{
+
+  "name": "Lorem Filler",
+  "version": "0.0.1",
+
+  "description": "Fill Lorem Ipsum into a page",
+
+
+  "page_action": {
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "16": "icons/icon-16.png"
+    }
+  },
+
+  "permissions": [
+  "https://*/*",
+  "http://*/*",
+  "tabs"
+],
+  "content_scripts": [
+    {
+        "matches":["http://*/*","https://*/*"],
+        "all_frames": true,
+        "js": [
+            "/js/onLoad.js"
+        ]
+    }
+],
+
+  "short_name": "Lorem Filler",
+
+  "manifest_version": 2
+}
