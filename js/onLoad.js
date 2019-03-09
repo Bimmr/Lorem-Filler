@@ -12,16 +12,17 @@ window.addEventListener('mousedown', function (e) {
         cancel();
     }
 });
+
 window.addEventListener("keydown", function (e) {
     if (readyToInsert) {
-        if (e.keyCode == 9) {
+        if (e.keyCode === 9) {
             e.preventDefault();
             addLorem(wordCount);
         }
         cancel();
     }
     else if (loreming) {
-        if (e.keyCode == 186) {
+        if (e.keyCode === 186) {
             loreming = false;
             wordCount = parseInt(wordCount);
             readyToInsert = true;
