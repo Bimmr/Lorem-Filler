@@ -1,14 +1,16 @@
 {
 
   "name": "Lorem Filler",
-  "version": "0.0.1",
+  "version": "1.0.0",
 
-  "description": "Fill Lorem Ipsum into a page",
+  "description": "Fill Lorem Ipsum into a page type \"Lorem;# \"",
 
 
   "page_action": {
     "default_icon": {
-      "48": "icons/icon-48.png",
+      "128": "icons/icon.png",
+      "64": "icons/icon-64.png",
+      "32": "icons/icon-32.png",
       "16": "icons/icon-16.png"
     }
   },
