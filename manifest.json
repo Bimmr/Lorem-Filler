@@ -1,8 +1,7 @@
 {
-
   "name": "Lorem Filler",
   "short_name": "Lorem Filler",
-  "description": "Fill Lorem Ipsum into a page type \"lorem#;\"",
+  "description": "Fill Lorem Ipsum into a page by typing \"lorem50;\" (replace 50 with desired word count)",
   "version": "1.1.0",
 
   "icons": {
@@ -11,18 +10,17 @@
     "32": "icons/icon-32.png",
     "16": "icons/icon-16.png"
   },
+
   "permissions": ["activeTab"],
+  "host_permissions": ["http://*/*", "https://*/*"],
 
   "content_scripts": [
     {
-        "matches":["http://*/*","https://*/*"],
-        "all_frames": true,
-        "js": [
-            "/js/onLoad.js"
-        ]
+      "matches": ["http://*/*", "https://*/*"],
+      "all_frames": true,
+      "js": ["/js/onLoad.js"]
     }
-],
-
+  ],
 
   "manifest_version": 3
 }

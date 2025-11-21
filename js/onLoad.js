@@ -1,182 +1,139 @@
-let lorem_matched = false,
-    ready_to_insert = false
-let word_count = ""
+// Encapsulate everything to avoid global pollution
+(() => {
+  'use strict';
 
-let keys_history = []
+  // Constants
+  const LOREM_TRIGGER = 'lorem';
+  const LOREM_TRIGGER_LENGTH = LOREM_TRIGGER.length;
+  const DEFAULT_WORD_COUNT = 50;
+  const INITIAL_WORDS = ['Lorem', 'ipsum'];
 
-// On Mousedown reset lorem filler
-window.addEventListener("mousedown", function (e) {
-  if (lorem_matched || ready_to_insert) {
-    reset()
-  }
-})
+  // State management
+  let loremMatched = false;
+  let wordCount = '';
+  let keysHistory = [];
 
-// On Keyup
-window.addEventListener("keyup", e=> {
-    
-    //If matched lorem, has numbers, and pressed semi-colin
-    if (ready_to_insert) {
-      if (e.key == "Enter" || e.key == " " || e.key == "Tab") {
-        e.preventDefault()
-        generateLoremFiller(parseInt(word_count))
-      }
-      //Reset regardless of what gets pressed
+  // On Mousedown reset lorem filler
+  window.addEventListener('mousedown', (e) => {
+    if (loremMatched) {
       reset();
-    } 
-    
-    //If matched lorem we're either watching for numbers, or a semi-colin
-    else if (lorem_matched) {
+    }
+  });
 
-        //If semi-colin, get read for insert
-        if (e.key == ";") {
-            word_count = parseInt(word_count)
-            ready_to_insert = true
+  // On Keyup
+  window.addEventListener('keyup', (e) => {
+    try {
+      // If matched lorem we're either watching for numbers, or a semicolon
+      if (loremMatched) {
+        // If semicolon, insert immediately
+        if (e.key === ';') {
+          generateLoremFiller(parseInt(wordCount) || DEFAULT_WORD_COUNT);
+          reset();
         }
-        //If is a number track the key pressed as string (Convert to int in next step)
-        else if(!isNaN(Number(e.key)))
-            word_count += e.key
+        // If is a number track the key pressed as string (Convert to int in next step)
+        else if (!isNaN(Number(e.key))) {
+          wordCount += e.key;
+        }
+        // If backspace, then remove the last number tracked
+        else if (e.key === 'Backspace' && wordCount.length > 0) {
+          wordCount = wordCount.substring(0, wordCount.length - 1);
+        }
+        // If backspace and no previous numbers, you're no longer matching lorem
+        else if (e.key === 'Backspace' && wordCount.length === 0) {
+          loremMatched = false;
+        }
+        // Anything else, reset
+        else {
+          reset();
+        }
+      } 
+      
+      else {
+        // Only keep track of last keys needed to match trigger word
+        if (keysHistory.length >= LOREM_TRIGGER_LENGTH) {
+          keysHistory.shift();
+        }
+        keysHistory.push(e.key.toLowerCase());
 
-        //If backspace, then remove the last number tracked
-        else if(e.key=="Backspace" && word_count>1){
-            word_count = word_count.substring(0, word_count.length-1)
+        // Check if last keys match "lorem"
+        if (keysHistory.join('') === LOREM_TRIGGER) {
+          loremMatched = true;
         }
+      }
+    } catch (error) {
+      console.error('Lorem Filler error:', error);
+      reset();
+    }
+  }, true);
 
-        //If backspace and no previous numbers, you're no longer matching lorem
-        else if(e.key=="Backspace" && word_count.length==0){
-            lorem_matched = false
-        }
-       
-        //Anything else, reset
-        else
-            reset();
+  function reset() {
+    wordCount = '';
+    keysHistory = [];
+    loremMatched = false;
+  }
+
+  function generateLoremFiller(words) {
+    let paragraph = INITIAL_WORDS.join(' ');
+    const wordsToGenerate = Math.max(0, words - INITIAL_WORDS.length);
+
+    for (let i = 0; i < wordsToGenerate; i++) {
+      const randomIndex = Math.floor(Math.random() * LOREM_WORDS.length);
+      paragraph += ' ' + LOREM_WORDS[randomIndex];
+    }
+    paragraph += '.';
+
+    insertText(paragraph);
+  }
+
+  // Insert text and remove trigger
+  function insertText(text) {
+    try {
+      const element = document.activeElement;
+      const charsToDelete = LOREM_TRIGGER_LENGTH + wordCount.length + 1;
+
+      // Handle standard input/textarea elements
+      if (element && element.value !== undefined) {
+        const cursorPos = element.selectionStart;
+        element.value = 
+          element.value.substring(0, cursorPos - charsToDelete) + 
+          text + 
+          element.value.substring(cursorPos);
         
-    } 
-    
-    
-    else {
-        //Only keep track of last 6 keys pressed
-        if (keys_history.length >= 6) keys_history.shift()
-        keys_history.push(e.key)
-
-        //Check if last 6 keys match "lorem"
-        if (keys_history.toString().indexOf(["l", "o", "r", "e", "m"].toString()) >= 0) {
-            lorem_matched = true;
+        // Position cursor after inserted text
+        const newCursorPos = cursorPos - charsToDelete + text.length;
+        element.setSelectionRange(newCursorPos, newCursorPos);
+        return;
       }
-    }
-  },
-  true
-)
 
-function reset() {
-  word_count = ""
-  keys_history = []
-  lorem_matched = false
-  ready_to_insert = false
-}
+      // Handle contenteditable elements
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
 
-
-function generateLoremFiller(words) {
-  let p = "Lorem ipsum"
-
-  for (let i = 0; i <= words - 3; i++) {
-    let r = Math.floor(Math.random() * lorem_words.length)
-    p += " " + lorem_words[r]
-  }
-  p += "."
-
-  insertText(p)
-}
-
-//Insert text
-function insertText(text) {
-  let spaces = 6 + word_count.length;
-
-  //Simple Insert
-  if (document.activeElement.value) {
-    let e = document.activeElement;
-    e.value = e.value.slice(0, e.length - spaces);
-    e.value += text;
-  }
-  //Compliacated insert - not sure how it works...
-  else {
-    let sel, range, cursorPos;
-    if (window.getSelection) {
-      sel = window.getSelection();
-      if (sel.getRangeAt && sel.rangeCount) {
-        range = sel.getRangeAt(0);
-        cursorPos = range.startOffset - spaces;
-        range.deleteContents();
-        range.insertNode(document.createTextNode(text));
-        let r = setSelectionRange(
-          range.startContainer,
-          cursorPos,
-          cursorPos + spaces
-        );
-        r.deleteContents();
-      }
-    } else if (document.selection && document.selection.createRange) {
-      document.selection.createRange().text = text;
+      const range = selection.getRangeAt(0);
+      
+      // Create a range to select the trigger text backwards from cursor
+      const deleteRange = range.cloneRange();
+      deleteRange.setStart(range.startContainer, Math.max(0, range.startOffset - charsToDelete));
+      deleteRange.setEnd(range.startContainer, range.startOffset);
+      
+      // Delete trigger and insert lorem text
+      deleteRange.deleteContents();
+      const textNode = document.createTextNode(text);
+      deleteRange.insertNode(textNode);
+      
+      // Move cursor to end of inserted text
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+    } catch (error) {
+      console.error('Lorem Filler insertion error:', error);
     }
   }
-}
-// Support function for compllicated insert
-function getTextNodesIn(node) {
-  let textNodes = [];
-  if (node.nodeType == 3) {
-    textNodes.push(node);
-  } else {
-    let children = node.childNodes;
-    for (let i = 0, len = children.length; i < len; ++i) {
-      textNodes.push.apply(textNodes, getTextNodesIn(children[i]));
-    }
-  }
-  return textNodes;
-}
-// Support function for compllicated insert
-function setSelectionRange(el, start, end) {
-  if (document.createRange && window.getSelection) {
-    let range = document.createRange();
-    range.selectNodeContents(el);
-    let textNodes = getTextNodesIn(el);
-    let foundStart = false;
-    let charCount = 0,
-      endCharCount;
 
-    for (let i = 0, textNode; (textNode = textNodes[i++]); ) {
-      endCharCount = charCount + textNode.length;
-      if (
-        !foundStart &&
-        start >= charCount &&
-        (start < endCharCount ||
-          (start == endCharCount && i <= textNodes.length))
-      ) {
-        range.setStart(textNode, start - charCount);
-        foundStart = true;
-      }
-      if (foundStart && end <= endCharCount) {
-        range.setEnd(textNode, end - charCount);
-        break;
-      }
-      charCount = endCharCount;
-    }
-
-    let sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-    return range;
-  } else if (document.selection && document.body.createTextRange) {
-    let textRange = document.body.createTextRange();
-    textRange.moveToElementText(el);
-    textRange.collapse(true);
-    textRange.moveEnd("character", end);
-    textRange.moveStart("character", start);
-    textRange.select();
-    return textRange;
-  }
-}
-
-//Possible Lorem Filler words
-let lorem_words = [
+  // Possible Lorem Filler words
+  const LOREM_WORDS = [
     "a",
     "ac",
     "accumsan",
@@ -356,3 +313,4 @@ let lorem_words = [
     "volutpat",
     "vulputate",
   ];
+})();
