@@ -2,7 +2,7 @@
   "name": "Lorem Filler",
   "short_name": "Lorem Filler",
   "description": "Fill Lorem Ipsum into a page by typing \"lorem50;\" (replace 50 with desired word count)",
-  "version": "1.1.0",
+  "version": "1.2.0",
 
   "icons": {
     "128": "icons/icon.png",
